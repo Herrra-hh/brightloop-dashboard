@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Brightloop Office Wall</title>
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* TV wall: a fixed 1920×1080 stage scaled to fit the screen. Below 900px wide it becomes one column. */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--color-night);color:var(--color-paper);font-family:var(--font-sans);font-size:var(--text-body);line-height:var(--leading-body);
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overflow:hidden}
+.accent{font-family:var(--font-accent);font-style:italic;font-weight:var(--weight-regular);color:var(--color-cobalt-bright);font-size:var(--accent-scale);letter-spacing:0}
+.label{font-size:17px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-night-muted);font-weight:var(--weight-medium)}
+.muted{color:var(--color-night-muted)}
+.n{color:var(--color-night-muted);font-weight:var(--weight-regular)}
+
+.viewport{position:fixed;inset:0;overflow:hidden}
+.stage{width:1920px;height:1080px;transform-origin:center;display:grid;
+  grid-template-rows:96px 156px 1fr 60px 84px;padding:0 56px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+
+/* Header */
+.top{display:flex;align-items:center;gap:var(--space-xl);border-bottom:var(--rule-width) solid var(--color-night-rule-strong)}
+.brand{display:flex;align-items:center;gap:var(--space-sm);flex:none}
+.mono{display:grid;place-items:center;width:52px;height:52px;background:var(--color-cobalt);color:var(--color-paper);font-weight:var(--weight-display);font-size:21px;letter-spacing:var(--tracking-display)}
+.brand b{display:block;font-size:30px;font-weight:var(--weight-strong);letter-spacing:var(--tracking-statement);line-height:1}
+.brand small{display:block;margin-top:5px;font-size:15px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-night-muted)}
+.nav{display:flex;gap:6px;margin-left:auto;align-self:stretch;align-items:stretch}
+.nav button{all:unset;cursor:pointer;position:relative;display:flex;align-items:center;gap:10px;padding:0 20px;font-size:19px;color:var(--color-night-muted)}
+.nav button span{font-size:14px;letter-spacing:var(--tracking-label)}
+.nav button[aria-current="true"]{color:var(--color-paper)}
+.nav button i{position:absolute;left:20px;right:20px;bottom:-1px;height:3px;background:var(--color-night-rule)}
+.nav button[aria-current="true"] i::after{content:"";position:absolute;inset:0;background:var(--color-cobalt-bright);transform-origin:left;transform:scaleX(0);animation:fill var(--dwell) linear forwards}
+.nav.paused button[aria-current="true"] i::after{animation:none;transform:scaleX(1)}
+@keyframes fill{to{transform:scaleX(1)}}
+.when{display:flex;align-items:center;gap:var(--space-lg);flex:none}
+.asof{border:var(--rule-width) solid var(--color-night-rule-strong);padding:7px 12px;font-size:15px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-night-muted);line-height:1.25;text-align:right}
+.asof b{display:block;color:var(--color-paper);font-weight:var(--weight-medium);letter-spacing:.04em}
+.clock{text-align:right;line-height:1}
+.clock b{display:block;font-size:52px;font-weight:var(--weight-display);letter-spacing:var(--tracking-display)}
+.clock small{display:block;margin-top:4px;font-size:15px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-night-muted)}
+
+/* Sections */
+.sec{display:none}
+.stage .sec.on{display:contents}
+.head{grid-row:2;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.head .kick{display:flex;gap:var(--space-sm);align-items:center}
+.head .kick b{font-weight:var(--weight-medium);color:var(--color-paper)}
+.headline{margin:0;font-size:50px;line-height:1.08;font-weight:var(--weight-statement);letter-spacing:var(--tracking-statement);max-width:1800px;text-wrap:balance}
+.body{grid-row:3;display:grid;grid-template-columns:460px 1fr 660px;gap:56px;padding:18px 0 22px;min-height:0}
+.col{min-width:0;display:flex;flex-direction:column}
+.col+.col{border-left:var(--rule-width) solid var(--color-night-rule);padding-left:56px;margin-left:-28px}
+.scope{grid-row:4;display:flex;align-items:center;gap:var(--space-sm);border-top:var(--rule-width) solid var(--color-night-rule);font-size:16px;line-height:1.3;color:var(--color-night-muted);overflow:hidden}
+.scope .label{flex:none}
+.scope .label{color:var(--color-paper)}
+.fade{animation:fade .6s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}}
+
+/* Hero number */
+.hero{font-size:166px;line-height:var(--leading-display);font-weight:var(--weight-display);letter-spacing:var(--tracking-display);margin:14px 0 18px;white-space:nowrap}
+.hero small{font-size:.42em;letter-spacing:var(--tracking-statement);color:var(--color-night-muted);font-weight:var(--weight-medium)}
+.lede{font-size:26px;line-height:1.3;margin:0}
+.lede+.lede{margin-top:8px}
+.sub{font-size:20px;line-height:1.4;color:var(--color-night-muted);margin:10px 0 0}
+.stat{margin-top:auto;border-top:var(--rule-width) solid var(--color-night-rule-strong);padding-top:var(--space-sm)}
+.stat .big{font-size:76px;font-weight:var(--weight-display);letter-spacing:var(--tracking-display);line-height:1;margin:10px 0 8px}
+.up{color:var(--color-paper)}
+
+/* Mini list (reasons) */
+.mini{list-style:none;margin:12px 0 0;padding:0}
+.mini li{display:grid;grid-template-columns:minmax(0,1fr) 96px 92px;align-items:center;gap:14px;padding:8px 0;border-bottom:var(--rule-width) solid var(--color-night-rule);font-size:20px;white-space:nowrap}
+.mini li:last-child{border-bottom:0}
+.mini i{display:block;height:10px;background:var(--color-night-bar);border-radius:0 var(--mark-radius) var(--mark-radius) 0}
+.mini li.hl i{background:var(--color-cobalt-bright)}
+.mini b{font-weight:var(--weight-medium);text-align:right}
+
+/* Charts */
+.chart{display:flex;flex-direction:column;min-height:0}
+.chart+.chart{margin-top:22px}
+.chart h3{margin:0 0 6px;font-size:22px;font-weight:var(--weight-medium);letter-spacing:var(--tracking-statement)}
+.chart h3 .n{font-size:18px;margin-left:8px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .note{margin:6px 0 0;font-size:17px;color:var(--color-night-muted)}
+svg text{font-family:var(--font-sans);font-variant-numeric:tabular-nums}
+.t-val{fill:var(--color-paper);font-size:17px;font-weight:var(--weight-medium)}
+.t-val.dim{fill:var(--color-night-muted);font-weight:var(--weight-regular)}
+.t-ax{fill:var(--color-night-muted);font-size:16px;letter-spacing:.06em;text-transform:uppercase}
+.t-cat{fill:var(--color-paper);font-size:22px}
+.m-bar{fill:var(--color-night-bar)}
+.m-bar.hl{fill:var(--color-cobalt-bright)}
+.m-base{stroke:var(--color-night-rule-strong);stroke-width:1}
+.m-flag{fill:none;stroke:var(--color-night-muted);stroke-width:1.5;stroke-dasharray:4 4}
+
+/* Ranked rows */
+.rows h3{margin:0 0 4px;font-size:22px;font-weight:var(--weight-medium);letter-spacing:var(--tracking-statement)}
+.rhead,.row{display:grid;grid-template-columns:30px minmax(0,1fr) 120px 100px 150px;align-items:center;column-gap:14px}
+.rhead{padding:8px 0;border-bottom:var(--rule-width) solid var(--color-night-rule-strong);font-size:14px;letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-night-muted)}
+.rhead span:nth-child(n+4){text-align:right}
+.row{padding:13px 0;border-bottom:var(--rule-width) solid var(--color-night-rule)}
+.row .rk{font-size:18px;color:var(--color-night-muted)}
+.row .nm{font-size:24px;line-height:1.1;white-space:nowrap;letter-spacing:var(--tracking-statement)}
+.row .nm small{display:block;overflow:hidden;text-overflow:ellipsis;font-size:16px;color:var(--color-night-muted);letter-spacing:0;margin-top:3px}
+.row .v{text-align:right;font-size:31px;font-weight:var(--weight-strong);letter-spacing:var(--tracking-statement);line-height:1}
+.row .d{text-align:right;font-size:17px;line-height:1.25;color:var(--color-night-muted)}
+.row .d b{display:block;color:var(--color-paper);font-weight:var(--weight-medium);font-size:19px}
+.row.hl{background:linear-gradient(90deg,rgb(111 143 255 / .14),rgb(111 143 255 / 0));box-shadow:inset 3px 0 0 var(--color-cobalt-bright);padding-left:10px;margin-left:-10px}
+.row.total .nm{font-weight:var(--weight-medium)}
+.rows .foot{margin:12px 0 0;font-size:17px;color:var(--color-night-muted);line-height:1.4}
+.spark{width:120px;height:44px;overflow:visible}
+.spark polyline{fill:none;stroke:var(--color-night-muted);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.row.hl .spark polyline{stroke:var(--color-cobalt-bright)}
+.spark circle{fill:var(--color-paper)}
+.row.hl .spark circle{fill:var(--color-cobalt-bright)}
+.spark .first{fill:var(--color-night-muted)}
+
+/* Ticker */
+.ticker{grid-row:5;display:grid;grid-template-columns:330px 1fr;margin:0 -56px;border-top:var(--rule-width) solid var(--color-night-rule-strong);background:var(--color-night-raised);min-width:0}
+.ticker .tag{background:var(--color-cobalt);color:var(--color-paper);display:flex;flex-direction:column;justify-content:center;padding:0 22px 0 56px;line-height:1.15}
+.ticker .tag b{font-size:19px;letter-spacing:var(--tracking-label);text-transform:uppercase;font-weight:var(--weight-strong)}
+.ticker .tag small{font-size:16px;opacity:.9}
+.track{overflow:hidden;display:flex;align-items:center;min-width:0;mask-image:linear-gradient(90deg,transparent 0,#000 40px,#000 calc(100% - 40px),transparent)}
+.crawl{--crawl:120s;display:flex;white-space:nowrap;animation:crawl var(--crawl) linear infinite;will-change:transform}
+.crawl ul{display:flex;list-style:none;margin:0;padding:0}
+.crawl li{font-size:30px;font-weight:var(--weight-regular);letter-spacing:var(--tracking-statement);padding:0 0 0 30px}
+.crawl li b{font-weight:var(--weight-strong)}
+.crawl li::after{content:"";display:inline-block;vertical-align:middle;width:9px;height:9px;background:var(--color-cobalt-bright);transform:rotate(45deg);margin-left:30px}
+.crawl li .n{font-weight:var(--weight-regular)}
+@keyframes crawl{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.crawl{animation:none}.fade{animation:none}.nav button[aria-current="true"] i::after{animation:none;transform:scaleX(1)}}
+
+/* Phone & narrow screens: one readable column, every section shown, headlines as a list */
+@media (max-width:900px){
+  body{overflow:auto;height:auto;font-size:16px}
+  .viewport{position:static;display:block}
+  .stage{position:static;width:auto;height:auto;transform:none!important;display:block;padding:0 16px}
+  .top{flex-wrap:wrap;gap:12px;padding:16px 0 14px;align-items:flex-start}
+  .brand b{font-size:24px}.mono{width:42px;height:42px;font-size:17px}
+  .nav{display:none}
+  .when{margin-left:auto;gap:12px}
+  .clock b{font-size:32px}.clock small{font-size:12px}
+  .asof{font-size:11px;padding:5px 8px}
+  .label{font-size:13px}
+  .sec,.stage .sec.on{display:block;border-bottom:var(--rule-width) solid var(--color-night-rule-strong);padding:28px 0 8px}
+  .head{gap:8px}
+  .headline{font-size:27px;line-height:1.15}
+  .body{display:block;padding:12px 0 0}
+  .col+.col{border-left:0;padding-left:0;margin-left:0;margin-top:28px}
+  .hero{font-size:clamp(64px,22vw,120px);margin:10px 0 12px}
+  .lede{font-size:19px}.sub{font-size:16px}
+  .stat{margin-top:22px}.stat .big{font-size:48px}
+  .mini li{font-size:16px;grid-template-columns:1fr 80px 70px;gap:10px}
+  .chart h3,.rows h3{font-size:18px}
+  /* charts are drawn ~550 units wide and shrink ~0.6× on a phone: enlarge their text to stay ≥11px */
+  .t-val{font-size:24px}.t-ax{font-size:18px;letter-spacing:0}.t-cat{font-size:28px}
+  .rhead{font-size:11px;white-space:nowrap}
+  .chart h3 .n{font-size:14px}
+  .chart .note,.rows .foot{font-size:14px}
+  .rhead,.row{grid-template-columns:22px 1fr 84px 76px;column-gap:10px}
+  .rhead span:nth-child(5),.row .d{grid-column:2/-1;text-align:left}
+  .rhead span:nth-child(5){display:none}
+  .row{row-gap:4px;padding:12px 0}
+  .row .nm{font-size:19px;white-space:normal;min-width:0}.row .nm small{font-size:13px}
+  .fade{animation:none}
+  .row .v{font-size:21px}
+  .row .d{font-size:14px}.row .d b{display:inline;font-size:14px;margin-right:6px}
+  .spark{width:84px;height:30px}
+  .scope{display:block;white-space:normal;font-size:14px;padding:12px 0 4px;border-top:0}
+  .ticker{display:block;margin:24px 0 0;background:none;border-top:0}
+  .ticker .tag{padding:10px 14px;margin:0 -16px}
+  .track{mask-image:none;display:block}
+  .crawl{animation:none;display:block;white-space:normal}
+  .crawl ul{display:block;padding:6px 0 24px}
+  .crawl ul+ul{display:none}
+  .crawl li{font-size:17px;padding:12px 0;border-bottom:var(--rule-width) solid var(--color-night-rule);display:block}
+  .crawl li::after{display:none}
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="stage" id="stage">
+  <header class="top">
+    <div class="brand"><span class="mono" aria-hidden="true">bl.</span><div><b>Brightloop</b><small>Office wall · for Sam Okafor</small></div></div>
+    <nav class="nav" id="nav" aria-label="Dashboard sections"></nav>
+    <div class="when">
+      <div class="asof">Data through<b id="asof"></b></div>
+      <div class="clock" aria-live="off"><b id="clock">--:--</b><small id="today"></small></div>
+    </div>
+  </header>
+  <main id="sections" style="display:contents"></main>
+  <div class="ticker" role="region" aria-label="Headlines">
+    <div class="tag"><b>Headlines</b><small>computed from the data</small></div>
+    <div class="track"><div class="crawl" id="crawl"></div></div>
+  </div>
+</div>
+</div>
+
+<script>
+const DATA = {"data_through":"2026-07-31","months":[{"month":"2025-08"},{"month":"2025-09"},{"month":"2025-10"},{"month":"2025-11"},{"month":"2025-12"},{"month":"2026-01"},{"month":"2026-02"},{"month":"2026-03"},{"month":"2026-04"},{"month":"2026-05"},{"month":"2026-06"},{"month":"2026-07"}],"billing_dupes":[{"month":"2026-03","duplicate_rows":14,"duplicate_paid":1826.0}],"monthly":[{"month":"2025-08","customers_end":400,"new_customers":400,"cancelled":0,"cash_collected":29635.9,"mrr_billed":29635.9,"charges":400,"failed":0,"refunded":0},{"month":"2025-09","customers_end":522,"new_customers":149,"cancelled":27,"cash_collected":40407.8,"mrr_billed":40891.0,"charges":549,"failed":1,"refunded":6},{"month":"2025-10","customers_end":636,"new_customers":149,"cancelled":35,"cash_collected":50131.4,"mrr_billed":51242.8,"charges":671,"failed":9,"refunded":6},{"month":"2025-11","customers_end":743,"new_customers":153,"cancelled":46,"cash_collected":60984.3,"mrr_billed":62541.4,"charges":789,"failed":10,"refunded":13},{"month":"2025-12","customers_end":859,"new_customers":157,"cancelled":41,"cash_collected":69800.9,"mrr_billed":72059.5,"charges":900,"failed":20,"refunded":14},{"month":"2026-01","customers_end":973,"new_customers":154,"cancelled":40,"cash_collected":77415.3,"mrr_billed":81578.1,"charges":1013,"failed":35,"refunded":9},{"month":"2026-02","customers_end":1102,"new_customers":185,"cancelled":56,"cash_collected":93539.6,"mrr_billed":94594.7,"charges":1158,"failed":8,"refunded":9},{"month":"2026-03","customers_end":1232,"new_customers":185,"cancelled":55,"cash_collected":105413.2,"mrr_billed":107377.4,"charges":1287,"failed":11,"refunded":15},{"month":"2026-04","customers_end":1365,"new_customers":196,"cancelled":63,"cash_collected":118035.5,"mrr_billed":121174.9,"charges":1428,"failed":13,"refunded":18},{"month":"2026-05","customers_end":1516,"new_customers":198,"cancelled":47,"cash_collected":133694.0,"mrr_billed":136468.3,"charges":1563,"failed":15,"refunded":17},{"month":"2026-06","customers_end":1651,"new_customers":189,"cancelled":54,"cash_collected":146536.1,"mrr_billed":149309.0,"charges":1705,"failed":21,"refunded":15},{"month":"2026-07","customers_end":1813,"new_customers":214,"cancelled":52,"cash_collected":160155.5,"mrr_billed":162423.9,"charges":1865,"failed":15,"refunded":13}],"churn_by_plan":[{"month":"2025-09","plan":"Growth","base":145,"cancelled":3,"churn_pct":2.1},{"month":"2025-09","plan":"Premium","base":68,"cancelled":2,"churn_pct":2.9},{"month":"2025-09","plan":"Starter","base":187,"cancelled":22,"churn_pct":11.8},{"month":"2025-10","plan":"Growth","base":206,"cancelled":9,"churn_pct":4.4},{"month":"2025-10","plan":"Premium","base":90,"cancelled":1,"churn_pct":1.1},{"month":"2025-10","plan":"Starter","base":226,"cancelled":25,"churn_pct":11.1},{"month":"2025-11","plan":"Growth","base":254,"cancelled":8,"churn_pct":3.1},{"month":"2025-11","plan":"Premium","base":116,"cancelled":0,"churn_pct":0.0},{"month":"2025-11","plan":"Starter","base":266,"cancelled":38,"churn_pct":14.3},{"month":"2025-12","plan":"Growth","base":309,"cancelled":11,"churn_pct":3.6},{"month":"2025-12","plan":"Premium","base":146,"cancelled":2,"churn_pct":1.4},{"month":"2025-12","plan":"Starter","base":288,"cancelled":28,"churn_pct":9.7},{"month":"2026-01","plan":"Growth","base":359,"cancelled":20,"churn_pct":5.6},{"month":"2026-01","plan":"Premium","base":166,"cancelled":1,"churn_pct":0.6},{"month":"2026-01","plan":"Starter","base":334,"cancelled":19,"churn_pct":5.7},{"month":"2026-02","plan":"Growth","base":390,"cancelled":9,"churn_pct":2.3},{"month":"2026-02","plan":"Premium","base":193,"cancelled":4,"churn_pct":2.1},{"month":"2026-02","plan":"Starter","base":390,"cancelled":43,"churn_pct":11.0},{"month":"2026-03","plan":"Growth","base":453,"cancelled":16,"churn_pct":3.5},{"month":"2026-03","plan":"Premium","base":228,"cancelled":1,"churn_pct":0.4},{"month":"2026-03","plan":"Starter","base":421,"cancelled":38,"churn_pct":9.0},{"month":"2026-04","plan":"Growth","base":504,"cancelled":14,"churn_pct":2.8},{"month":"2026-04","plan":"Premium","base":270,"cancelled":6,"churn_pct":2.2},{"month":"2026-04","plan":"Starter","base":458,"cancelled":43,"churn_pct":9.4},{"month":"2026-05","plan":"Growth","base":546,"cancelled":15,"churn_pct":2.7},{"month":"2026-05","plan":"Premium","base":312,"cancelled":5,"churn_pct":1.6},{"month":"2026-05","plan":"Starter","base":507,"cancelled":27,"churn_pct":5.3},{"month":"2026-06","plan":"Growth","base":601,"cancelled":21,"churn_pct":3.5},{"month":"2026-06","plan":"Premium","base":363,"cancelled":5,"churn_pct":1.4},{"month":"2026-06","plan":"Starter","base":552,"cancelled":28,"churn_pct":5.1},{"month":"2026-07","plan":"Growth","base":641,"cancelled":17,"churn_pct":2.7},{"month":"2026-07","plan":"Premium","base":401,"cancelled":6,"churn_pct":1.5},{"month":"2026-07","plan":"Starter","base":609,"cancelled":29,"churn_pct":4.8}],"churn_july_reasons":[{"plan":"Growth","cancel_reason":"Not using it enough","n":6},{"plan":"Growth","cancel_reason":"Missing integrations","n":6},{"plan":"Growth","cancel_reason":"Went out of business","n":2},{"plan":"Growth","cancel_reason":"Too expensive","n":2},{"plan":"Growth","cancel_reason":"Switched to competitor","n":1},{"plan":"Premium","cancel_reason":"Switched to competitor","n":3},{"plan":"Premium","cancel_reason":"Too expensive","n":2},{"plan":"Premium","cancel_reason":"Not using it enough","n":1},{"plan":"Starter","cancel_reason":"Missing integrations","n":22},{"plan":"Starter","cancel_reason":"Too expensive","n":3},{"plan":"Starter","cancel_reason":"Switched to competitor","n":3},{"plan":"Starter","cancel_reason":"Not using it enough","n":1}],"stay_by_reports":[{"bucket":"0\u20132","sort_key":0,"customers":301,"stayed":126,"stayed_pct":41.9},{"bucket":"3\u20135","sort_key":3,"customers":286,"stayed":219,"stayed_pct":76.6},{"bucket":"6\u20139","sort_key":6,"customers":178,"stayed":139,"stayed_pct":78.1},{"bucket":"10+","sort_key":10,"customers":397,"stayed":373,"stayed_pct":94.0}],"stay_by_integrations":[{"bucket":"0","sort_key":0,"customers":891,"stayed":623,"stayed_pct":69.9},{"bucket":"1","sort_key":1,"customers":255,"stayed":221,"stayed_pct":86.7},{"bucket":"2+","sort_key":2,"customers":16,"stayed":13,"stayed_pct":81.3}],"stay_by_integrations_plan":[{"plan":"Growth","any_integration":0,"customers":311,"stayed":251,"stayed_pct":80.7},{"plan":"Growth","any_integration":1,"customers":130,"stayed":114,"stayed_pct":87.7},{"plan":"Premium","any_integration":0,"customers":140,"stayed":130,"stayed_pct":92.9},{"plan":"Premium","any_integration":1,"customers":59,"stayed":57,"stayed_pct":96.6},{"plan":"Starter","any_integration":0,"customers":440,"stayed":242,"stayed_pct":55.0},{"plan":"Starter","any_integration":1,"customers":82,"stayed":63,"stayed_pct":76.8}],"integrations_trend":[{"month":"2025-09","customers":373,"with_integration":90,"pct":24.1},{"month":"2025-10","customers":487,"with_integration":145,"pct":29.8},{"month":"2025-11","customers":590,"with_integration":204,"pct":34.6},{"month":"2025-12","customers":702,"with_integration":260,"pct":37.0},{"month":"2026-01","customers":819,"with_integration":312,"pct":38.1},{"month":"2026-02","customers":917,"with_integration":366,"pct":39.9},{"month":"2026-03","customers":1047,"with_integration":433,"pct":41.4},{"month":"2026-04","customers":1169,"with_integration":618,"pct":52.9},{"month":"2026-05","customers":1318,"with_integration":809,"pct":61.4},{"month":"2026-06","customers":1462,"with_integration":979,"pct":67.0},{"month":"2026-07","customers":1599,"with_integration":1135,"pct":71.0}],"integrations_trend_by_plan":[{"plan":"Growth","month":"2025-09","customers":142,"with_integration":39,"pct":27.5},{"plan":"Growth","month":"2025-10","customers":197,"with_integration":72,"pct":36.5},{"plan":"Growth","month":"2025-11","customers":246,"with_integration":100,"pct":40.7},{"plan":"Growth","month":"2025-12","customers":298,"with_integration":130,"pct":43.6},{"plan":"Growth","month":"2026-01","customers":339,"with_integration":151,"pct":44.5},{"plan":"Growth","month":"2026-02","customers":381,"with_integration":181,"pct":47.5},{"plan":"Growth","month":"2026-03","customers":437,"with_integration":210,"pct":48.1},{"plan":"Growth","month":"2026-04","customers":490,"with_integration":274,"pct":55.9},{"plan":"Growth","month":"2026-05","customers":531,"with_integration":338,"pct":63.7},{"plan":"Growth","month":"2026-06","customers":580,"with_integration":392,"pct":67.6},{"plan":"Growth","month":"2026-07","customers":624,"with_integration":434,"pct":69.6},{"plan":"Premium","month":"2025-09","customers":66,"with_integration":21,"pct":31.8},{"plan":"Premium","month":"2025-10","customers":89,"with_integration":32,"pct":36.0},{"plan":"Premium","month":"2025-11","customers":116,"with_integration":53,"pct":45.7},{"plan":"Premium","month":"2025-12","customers":144,"with_integration":66,"pct":45.8},{"plan":"Premium","month":"2026-01","customers":165,"with_integration":86,"pct":52.1},{"plan":"Premium","month":"2026-02","customers":189,"with_integration":95,"pct":50.3},{"plan":"Premium","month":"2026-03","customers":227,"with_integration":124,"pct":54.6},{"plan":"Premium","month":"2026-04","customers":264,"with_integration":161,"pct":61.0},{"plan":"Premium","month":"2026-05","customers":307,"with_integration":191,"pct":62.2},{"plan":"Premium","month":"2026-06","customers":358,"with_integration":236,"pct":65.9},{"plan":"Premium","month":"2026-07","customers":395,"with_integration":272,"pct":68.9},{"plan":"Starter","month":"2025-09","customers":165,"with_integration":30,"pct":18.2},{"plan":"Starter","month":"2025-10","customers":201,"with_integration":41,"pct":20.4},{"plan":"Starter","month":"2025-11","customers":228,"with_integration":51,"pct":22.4},{"plan":"Starter","month":"2025-12","customers":260,"with_integration":64,"pct":24.6},{"plan":"Starter","month":"2026-01","customers":315,"with_integration":75,"pct":23.8},{"plan":"Starter","month":"2026-02","customers":347,"with_integration":90,"pct":25.9},{"plan":"Starter","month":"2026-03","customers":383,"with_integration":99,"pct":25.8},{"plan":"Starter","month":"2026-04","customers":415,"with_integration":183,"pct":44.1},{"plan":"Starter","month":"2026-05","customers":480,"with_integration":280,"pct":58.3},{"plan":"Starter","month":"2026-06","customers":524,"with_integration":351,"pct":67.0},{"plan":"Starter","month":"2026-07","customers":580,"with_integration":429,"pct":74.0}],"support_topics":[{"category":"integrations","tickets":696,"rated":467,"avg_sat":2.75,"low_rated":222,"low_pct":47.5,"still_open":7,"avg_days_to_resolve":5.1},{"category":"billing","tickets":184,"rated":132,"avg_sat":3.93,"low_rated":17,"low_pct":12.9,"still_open":2,"avg_days_to_resolve":3.3},{"category":"onboarding","tickets":737,"rated":517,"avg_sat":4.05,"low_rated":53,"low_pct":10.3,"still_open":7,"avg_days_to_resolve":4.2},{"category":"bug","tickets":373,"rated":254,"avg_sat":4.1,"low_rated":23,"low_pct":9.1,"still_open":8,"avg_days_to_resolve":3.1},{"category":"how-to","tickets":575,"rated":389,"avg_sat":4.1,"low_rated":40,"low_pct":10.3,"still_open":19,"avg_days_to_resolve":4.9}],"support_monthly":[{"category":"billing","month":"2025-09","tickets":5,"rated":2,"avg_sat":4.5},{"category":"billing","month":"2025-10","tickets":10,"rated":8,"avg_sat":4.13},{"category":"billing","month":"2025-11","tickets":9,"rated":5,"avg_sat":4.0},{"category":"billing","month":"2025-12","tickets":12,"rated":11,"avg_sat":4.0},{"category":"billing","month":"2026-01","tickets":23,"rated":17,"avg_sat":3.53},{"category":"billing","month":"2026-02","tickets":12,"rated":8,"avg_sat":4.0},{"category":"billing","month":"2026-03","tickets":15,"rated":11,"avg_sat":3.73},{"category":"billing","month":"2026-04","tickets":25,"rated":18,"avg_sat":3.89},{"category":"billing","month":"2026-05","tickets":22,"rated":17,"avg_sat":4.0},{"category":"billing","month":"2026-06","tickets":27,"rated":22,"avg_sat":4.09},{"category":"billing","month":"2026-07","tickets":24,"rated":13,"avg_sat":4.0},{"category":"bug","month":"2025-08","tickets":8,"rated":4,"avg_sat":3.75},{"category":"bug","month":"2025-09","tickets":12,"rated":10,"avg_sat":4.1},{"category":"bug","month":"2025-10","tickets":20,"rated":15,"avg_sat":3.8},{"category":"bug","month":"2025-11","tickets":31,"rated":21,"avg_sat":4.1},{"category":"bug","month":"2025-12","tickets":15,"rated":9,"avg_sat":4.11},{"category":"bug","month":"2026-01","tickets":28,"rated":17,"avg_sat":4.12},{"category":"bug","month":"2026-02","tickets":28,"rated":16,"avg_sat":4.31},{"category":"bug","month":"2026-03","tickets":39,"rated":30,"avg_sat":4.23},{"category":"bug","month":"2026-04","tickets":47,"rated":35,"avg_sat":3.94},{"category":"bug","month":"2026-05","tickets":43,"rated":36,"avg_sat":4.17},{"category":"bug","month":"2026-06","tickets":47,"rated":32,"avg_sat":4.09},{"category":"bug","month":"2026-07","tickets":55,"rated":29,"avg_sat":4.17},{"category":"how-to","month":"2025-08","tickets":9,"rated":5,"avg_sat":3.8},{"category":"how-to","month":"2025-09","tickets":19,"rated":14,"avg_sat":3.93},{"category":"how-to","month":"2025-10","tickets":24,"rated":20,"avg_sat":4.45},{"category":"how-to","month":"2025-11","tickets":50,"rated":29,"avg_sat":4.24},{"category":"how-to","month":"2025-12","tickets":18,"rated":13,"avg_sat":4.62},{"category":"how-to","month":"2026-01","tickets":47,"rated":31,"avg_sat":4.1},{"category":"how-to","month":"2026-02","tickets":56,"rated":37,"avg_sat":3.81},{"category":"how-to","month":"2026-03","tickets":50,"rated":39,"avg_sat":4.08},{"category":"how-to","month":"2026-04","tickets":39,"rated":27,"avg_sat":4.41},{"category":"how-to","month":"2026-05","tickets":79,"rated":60,"avg_sat":3.98},{"category":"how-to","month":"2026-06","tickets":89,"rated":61,"avg_sat":4.18},{"category":"how-to","month":"2026-07","tickets":95,"rated":53,"avg_sat":3.91},{"category":"integrations","month":"2025-08","tickets":21,"rated":16,"avg_sat":2.88},{"category":"integrations","month":"2025-09","tickets":34,"rated":23,"avg_sat":2.74},{"category":"integrations","month":"2025-10","tickets":41,"rated":27,"avg_sat":2.15},{"category":"integrations","month":"2025-11","tickets":53,"rated":34,"avg_sat":2.68},{"category":"integrations","month":"2025-12","tickets":40,"rated":32,"avg_sat":2.56},{"category":"integrations","month":"2026-01","tickets":60,"rated":45,"avg_sat":2.8},{"category":"integrations","month":"2026-02","tickets":56,"rated":34,"avg_sat":2.53},{"category":"integrations","month":"2026-03","tickets":66,"rated":45,"avg_sat":2.84},{"category":"integrations","month":"2026-04","tickets":77,"rated":52,"avg_sat":2.79},{"category":"integrations","month":"2026-05","tickets":82,"rated":53,"avg_sat":2.72},{"category":"integrations","month":"2026-06","tickets":80,"rated":60,"avg_sat":2.87},{"category":"integrations","month":"2026-07","tickets":86,"rated":46,"avg_sat":3.09},{"category":"onboarding","month":"2025-08","tickets":76,"rated":57,"avg_sat":4.23},{"category":"onboarding","month":"2025-09","tickets":75,"rated":53,"avg_sat":3.83},{"category":"onboarding","month":"2025-10","tickets":55,"rated":38,"avg_sat":4.05},{"category":"onboarding","month":"2025-11","tickets":51,"rated":39,"avg_sat":4.13},{"category":"onboarding","month":"2025-12","tickets":47,"rated":31,"avg_sat":3.55},{"category":"onboarding","month":"2026-01","tickets":60,"rated":46,"avg_sat":4.24},{"category":"onboarding","month":"2026-02","tickets":55,"rated":40,"avg_sat":4.22},{"category":"onboarding","month":"2026-03","tickets":68,"rated":38,"avg_sat":4.05},{"category":"onboarding","month":"2026-04","tickets":71,"rated":48,"avg_sat":4.0},{"category":"onboarding","month":"2026-05","tickets":60,"rated":44,"avg_sat":4.0},{"category":"onboarding","month":"2026-06","tickets":62,"rated":42,"avg_sat":4.05},{"category":"onboarding","month":"2026-07","tickets":57,"rated":41,"avg_sat":4.12}]};
+const DWELL = 12000;
+
+/* ---------- formatting ---------- */
+const nf = new Intl.NumberFormat('en-US');
+const int = v => nf.format(Math.round(v));
+const usd = v => '$' + nf.format(Math.round(v));
+const usdK = v => '$' + (v / 1000).toFixed(v >= 100000 ? 0 : 1) + 'K';
+const p1 = v => (Math.round(v * 10) / 10).toFixed(1) + '%';
+const pct = (k, n) => p1(100 * k / n);
+const of = (k, n) => `<span class="n">(${int(k)} of ${int(n)})</span>`;
+const pctOf = (k, n) => `${pct(k, n)} ${of(k, n)}`;
+const signed = (v, f = int) => (v > 0 ? '+' : v < 0 ? '−' : '±') + f(Math.abs(v));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mName = m => MON[+m.slice(5) - 1];
+const mLong = m => new Date(m + '-01T12:00').toLocaleString('en-US', {month: 'long', year: 'numeric'});
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tip = s => `<title>${esc(s)}</title>`;
+
+/* ---------- marks ---------- */
+// Vertical bars: values on the bars, no y-axis (Paper & Cobalt chart rule). 4px rounded data end.
+// The viewBox width matches the middle column (~550px) so SVG text renders at its stated size.
+// With many bars only every other value is printed (always the last); hover shows the rest.
+function barsV(items, {h = 230, w = 550, fmt = int, labelEvery = items.length > 8 ? 2 : 1} = {}) {
+  const top = 30, bot = 34, ih = h - top - bot, max = Math.max(...items.map(d => d.v)) || 1;
+  const step = w / items.length, bw = Math.min(step - 8, 64), off = (items.length - 1) % labelEvery;
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(items.map(d => d.x + ' ' + fmt(d.v)).join(', '))}">`;
+  items.forEach((d, i) => {
+    const x = i * step + (step - bw) / 2, bh = Math.max(2, ih * d.v / max), y = top + ih - bh, r = Math.min(4, bh);
+    s += `<path class="m-bar${d.hl ? ' hl' : ''}" d="M${x},${top + ih}V${y + r}q0,-${r} ${r},-${r}h${bw - 2 * r}q${r},0 ${r},${r}V${top + ih}Z">${tip(d.tip || d.x + ': ' + fmt(d.v))}</path>`;
+    if ((i - off) % labelEvery === 0 || d.hl)
+      s += `<text class="t-val${d.hl ? '' : ' dim'}" x="${x + bw / 2}" y="${y - 9}" text-anchor="middle">${fmt(d.v)}</text>`;
+    s += `<text class="t-ax" x="${x + bw / 2}" y="${h - 8}" text-anchor="middle">${d.x}</text>`;
+    if (d.flag) s += `<rect class="m-flag" x="${x - 4}" y="${y - 5}" width="${bw + 8}" height="${bh + 5}" rx="3"/>`;
+  });
+  return s + `<line class="m-base" x1="0" x2="${w}" y1="${top + ih}" y2="${top + ih}"/></svg>`;
+}
+
+// Horizontal bars with a category label and a value + count on the right.
+function barsH(items, {w = 550, rowH = 64, labelW = 150, valW = 200, max} = {}) {
+  max = max || Math.max(...items.map(d => d.v));
+  const h = items.length * rowH, bw = w - labelW - valW;
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(items.map(d => d.label + ' ' + d.text).join(', '))}">`;
+  items.forEach((d, i) => {
+    const y = i * rowH + rowH / 2, len = Math.max(3, bw * d.v / max), bh = Math.min(30, rowH - 22);
+    s += `<text class="t-cat" x="0" y="${y + 8}">${esc(d.label)}</text>`;
+    s += `<path class="m-bar${d.hl ? ' hl' : ''}" d="M${labelW},${y - bh / 2}h${len - 4}q4,0 4,4v${bh - 8}q0,4 -4,4h-${len - 4}Z">${tip(d.label + ': ' + d.plain)}</path>`;
+    s += `<text class="t-val" x="${labelW + len + 14}" y="${y + 7}">${d.text}<tspan class="t-val dim" dx="10">${d.count || ''}</tspan></text>`;
+  });
+  return s + `<line class="m-base" x1="${labelW}" x2="${labelW}" y1="0" y2="${h}"/></svg>`;
+}
+
+// Grouped pair bars (e.g. no integration vs integration, by plan).
+function barsPair(groups, {w = 550, h = 250, fmt = p1, max = 100} = {}) {
+  const top = 34, bot = 58, ih = h - top - bot, gw = w / groups.length, bw = Math.min(70, gw / 2 - 12);
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(groups.map(g => g.label + ': ' + g.bars.map(b => b.name + ' ' + fmt(b.v)).join(', ')).join('; '))}">`;
+  groups.forEach((g, gi) => {
+    const cx = gi * gw + gw / 2;
+    g.bars.forEach((b, bi) => {
+      const x = cx + (bi === 0 ? -bw - 3 : 3), bh = ih * b.v / max, y = top + ih - bh;
+      s += `<path class="m-bar${b.hl ? ' hl' : ''}" d="M${x},${top + ih}V${y + 4}q0,-4 4,-4h${bw - 8}q4,0 4,4V${top + ih}Z">${tip(`${g.label}, ${b.name}: ${b.plain}`)}</path>`;
+      s += `<text class="t-val${b.hl ? '' : ' dim'}" x="${x + bw / 2}" y="${y - 10}" text-anchor="middle">${fmt(b.v)}</text>`;
+      s += `<text class="t-ax" x="${x + bw / 2}" y="${top + ih + 24}" text-anchor="middle" style="font-size:14px">${b.short}</text>`;
+    });
+    s += `<text class="t-cat" x="${cx}" y="${h - 4}" text-anchor="middle">${esc(g.label)}</text>`;
+  });
+  return s + `<line class="m-base" x1="0" x2="${w}" y1="${top + ih}" y2="${top + ih}"/></svg>`;
+}
+
+function spark(vals, labels) {
+  const w = 160, h = 44, pad = 5, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => [pad + i * (w - 2 * pad) / (vals.length - 1), pad + (h - 2 * pad) * (1 - (v - lo) / span)]);
+  const [lx, ly] = pts[pts.length - 1], [fx, fy] = pts[0];
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.map(p => p.map(n => n.toFixed(1)).join(',')).join(' ')}"/>` +
+    `<circle class="first" cx="${fx}" cy="${fy}" r="3"/><circle cx="${lx}" cy="${ly}" r="4.5"/>${tip(labels ? labels.join(' → ') : '')}</svg>`;
+}
+
+const rowsHead = cols => `<div class="rhead"><span>#</span>${cols.map(c => `<span>${c}</span>`).join('')}</div>`;
+const row = (r, i) => `<div class="row${r.hl ? ' hl' : ''}${r.total ? ' total' : ''}"><span class="rk">${r.total ? '' : i + 1}</span>` +
+  `<span class="nm">${r.name}${r.small ? `<small>${r.small}</small>` : ''}</span>${r.spark}<span class="v">${r.v}</span><span class="d">${r.d}</span></div>`;
+
+/* ---------- data shaping ---------- */
+const M = DATA.monthly, last = M[M.length - 1], prev = M[M.length - 2], first = M[0];
+const months = DATA.months.map(r => r.month);
+const LAST = last.month, LASTM = mLong(last.month).split(' ')[0];
+const dupe = DATA.billing_dupes[0];
+const asofText = new Date(DATA.data_through + 'T12:00').toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+
+const churnMonths = [...new Set(DATA.churn_by_plan.map(r => r.month))];
+const PLANS = ['Starter', 'Growth', 'Premium'];
+const churn = (plan, m) => DATA.churn_by_plan.find(r => r.plan === plan && r.month === m);
+const churnAll = m => DATA.churn_by_plan.filter(r => r.month === m).reduce((a, r) => ({base: a.base + r.base, cancelled: a.cancelled + r.cancelled}), {base: 0, cancelled: 0});
+const julyAll = churnAll(LAST), firstChurnM = churnMonths[0], firstAll = churnAll(firstChurnM);
+const julyPlans = PLANS.map(p => churn(p, LAST)).sort((a, b) => b.churn_pct - a.churn_pct);
+const reasons = Object.entries(DATA.churn_july_reasons.reduce((a, r) => (a[r.cancel_reason] = (a[r.cancel_reason] || 0) + r.n, a), {})).sort((a, b) => b[1] - a[1]);
+const reasonsByPlan = (plan, reason) => (DATA.churn_july_reasons.find(r => r.plan === plan && r.cancel_reason === reason) || {n: 0}).n;
+
+const rep = DATA.stay_by_reports, repTop = rep[rep.length - 1], repLow = rep[0];
+const repCohort = rep.reduce((a, r) => a + r.customers, 0);
+const sip = (plan, any) => DATA.stay_by_integrations_plan.find(r => r.plan === plan && r.any_integration === any);
+const it = DATA.integrations_trend, itFirst = it[0], itLast = it[it.length - 1];
+const itPlan = plan => DATA.integrations_trend_by_plan.filter(r => r.plan === plan);
+const itPlanM = (plan, m) => itPlan(plan).find(r => r.month === m);
+
+const topics = DATA.support_topics;  // sorted by avg satisfaction, lowest first
+const worst = topics[0], others = topics.slice(1);
+const ticketsTotal = topics.reduce((a, t) => a + t.tickets, 0);
+const ratedTotal = topics.reduce((a, t) => a + t.rated, 0);
+const topicMonthly = cat => DATA.support_monthly.filter(r => r.category === cat);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+const custDelta = last.customers_end - prev.customers_end;
+const cashMultiple = last.cash_collected / first.cash_collected;
+const paidCharges = last.charges - last.failed - last.refunded;
+const ratio = julyPlans[0].churn_pct / julyPlans[julyPlans.length - 1].churn_pct;
+const starterIntegReason = reasonsByPlan('Starter', 'Missing integrations');
+const starterJuly = churn('Starter', LAST);
+
+/* ---------- sections ---------- */
+const SECTIONS = [
+{
+  key: 'cash', nav: 'Customers & cash',
+  headline: `Brightloop ended ${LASTM} with <b>${int(last.customers_end)}</b> customers and collected <b>${usd(last.cash_collected)}</b>, <span class="accent">${cashMultiple.toFixed(1)}×</span> what it collected in ${mName(first.month)} ${first.month.slice(0, 4)}`,
+  scope: `Customers = signed up by month end and not cancelled that month or earlier · Cash = amount_paid, one charge per customer-month: ${mName(dupe.month)} had ${dupe.duplicate_rows} duplicate charges (${usd(dupe.duplicate_paid)}) removed · Failed and refunded charges count as $0`,
+  body: () => `
+    <div class="col">
+      <span class="label">Customers · end of ${mLong(LAST)}</span>
+      <div class="hero">${int(last.customers_end)}</div>
+      <p class="lede"><span class="up">${signed(custDelta)}</span> vs ${mName(prev.month)} <span class="n">(${signed(100 * custDelta / prev.customers_end, p1)}, from ${int(prev.customers_end)})</span></p>
+      <p class="sub">${int(last.new_customers)} joined and ${int(last.cancelled)} cancelled in ${mName(LAST)}</p>
+      <div class="stat">
+        <span class="label">Cash collected · ${mName(LAST)}</span>
+        <div class="big">${usd(last.cash_collected)}</div>
+        <p class="sub" style="margin:0">${pct(last.cash_collected, last.mrr_billed)} of ${usd(last.mrr_billed)} billed · ${int(paidCharges)} of ${int(last.charges)} charges paid, ${last.failed} failed, ${last.refunded} refunded</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="chart"><h3>Customers at month end <span class="n">count</span></h3>
+        ${barsV(M.map(r => ({x: mName(r.month), v: r.customers_end, hl: r.month === LAST, tip: `${mLong(r.month)}: ${int(r.customers_end)} customers`})), {h: 236, fmt: int})}</div>
+      <div class="chart"><h3>Cash collected per month <span class="n">US dollars</span></h3>
+        ${barsV(M.map(r => ({x: mName(r.month), v: r.cash_collected, hl: r.month === LAST, flag: r.month === dupe.month, tip: `${mLong(r.month)}: ${usd(r.cash_collected)} collected of ${usd(r.mrr_billed)} billed`})), {h: 236, fmt: usdK})}
+        <p class="note">Dashed box: ${mName(dupe.month)}, counted once per customer (${dupe.duplicate_rows} duplicate charges removed)</p></div>
+    </div>
+    <div class="col rows">
+      <h3>${mName(LAST)} vs ${mName(prev.month)} <span class="n" style="font-size:18px">· trend ${mName(first.month)}–${mName(LAST)}</span></h3>
+      ${rowsHead(['Measure', '12 months', mName(LAST), `vs ${mName(prev.month)}`])}
+      ${[
+        {name: 'Customers', small: 'at month end', key: 'customers_end', f: int, hl: true},
+        {name: 'Cash collected', small: 'deduplicated', key: 'cash_collected', f: usdK},
+        {name: 'Billed MRR', small: 'what customers owed', key: 'mrr_billed', f: usdK},
+        {name: 'New customers', small: 'signed up', key: 'new_customers', f: int, from: 1},
+        {name: 'Cancellations', small: 'cancel date in month', key: 'cancelled', f: int, from: 1},
+        {name: 'Failed charges', small: 'card declined', key: 'failed', f: int, from: 1},
+        {name: 'Refunded charges', small: 'paid, then returned', key: 'refunded', f: int, from: 1},
+      ].map((m, i) => {
+        const series = M.slice(m.from || 0), a = last[m.key], b = prev[m.key], d = a - b;
+        return row({name: m.name, small: m.small, hl: m.hl,
+          spark: spark(series.map(r => r[m.key]), series.map(r => `${mName(r.month)} ${m.f(r[m.key])}`)),
+          v: m.f(a), d: `<b>${signed(d, m.f === usdK ? usdK : int)}</b>${b ? `${signed(100 * d / b, p1)} from ${m.f(b)}` : ''}`}, i);
+      }).join('')}
+    </div>`
+},
+{
+  key: 'churn', nav: `${mName(LAST)} churn by plan`,
+  headline: `${julyPlans[0].plan} lost <b>${p1(julyPlans[0].churn_pct)}</b> ${of(julyPlans[0].cancelled, julyPlans[0].base)} of its customers in ${LASTM}, <span class="accent">${Math.round(ratio)}× the rate</span> of ${julyPlans[2].plan} at ${p1(julyPlans[2].churn_pct)} ${of(julyPlans[2].cancelled, julyPlans[2].base)}`,
+  scope: `Churn = customers on the books at the end of the previous month who cancelled during the month · Base excludes customers who signed up in the month · Reasons are the one option each customer picked when cancelling`,
+  body: () => `
+    <div class="col">
+      <span class="label">Churn · ${mLong(LAST)} · all plans</span>
+      <div class="hero">${pct(julyAll.cancelled, julyAll.base)}</div>
+      <p class="lede">${int(julyAll.cancelled)} of ${int(julyAll.base)} customers left</p>
+      <p class="sub">${mName(firstChurnM)} ${firstChurnM.slice(0, 4)}: ${pctOf(firstAll.cancelled, firstAll.base)}</p>
+      <div class="stat">
+        <span class="label">Why they left in ${mName(LAST)} · ${julyAll.cancelled} cancellations</span>
+        <ul class="mini">${reasons.map(([r, n], i) => `<li class="${i === 0 ? 'hl' : ''}"><span>${esc(r)}</span><i style="width:${100 * n / reasons[0][1]}%"></i><b>${n} <span class="n" style="font-size:16px">${p1(100 * n / julyAll.cancelled)}</span></b></li>`).join('')}</ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="chart"><h3>Churn in ${mLong(LAST)}, by plan <span class="n">% · left of base</span></h3>
+        ${barsH(julyPlans.map((r, i) => ({label: r.plan, v: r.churn_pct, hl: i === 0, text: p1(r.churn_pct), count: `${r.cancelled} of ${int(r.base)}`, plain: `${p1(r.churn_pct)} (${r.cancelled} of ${r.base})`})), {rowH: 76})}</div>
+      <div class="chart"><h3>Monthly churn, all plans <span class="n">${mName(firstChurnM)}–${mName(LAST)}</span></h3>
+        ${barsV(churnMonths.map(m => { const a = churnAll(m); return {x: mName(m), v: 100 * a.cancelled / a.base, hl: m === LAST, tip: `${mLong(m)}: ${pct(a.cancelled, a.base)} (${a.cancelled} of ${a.base})`}; }), {h: 220, fmt: p1})}
+        <p class="note">${starterIntegReason} of ${starterJuly.cancelled} Starter cancellations in ${mName(LAST)} named missing integrations</p></div>
+    </div>
+    <div class="col rows">
+      <h3>Plans ranked by ${mName(LAST)} churn</h3>
+      ${rowsHead(['Plan', `${mName(firstChurnM)}–${mName(LAST)}`, mName(LAST), 'Left / base'])}
+      ${julyPlans.map((r, i) => {
+        const series = churnMonths.map(m => churn(r.plan, m));
+        const price = {Starter: 29, Growth: 79, Premium: 199}[r.plan];
+        return row({name: r.plan, small: `$${price} / month`, hl: i === 0,
+          spark: spark(series.map(s => s.churn_pct), series.map(s => `${mName(s.month)} ${p1(s.churn_pct)}`)),
+          v: p1(r.churn_pct), d: `<b>${r.cancelled} of ${int(r.base)}</b>${mName(firstChurnM)}: ${p1(series[0].churn_pct)}<br>(${series[0].cancelled} of ${series[0].base})`}, i);
+      }).join('')}
+      ${row({name: 'All plans', total: true, spark: spark(churnMonths.map(m => { const a = churnAll(m); return 100 * a.cancelled / a.base; })),
+        v: pct(julyAll.cancelled, julyAll.base), d: `<b>${julyAll.cancelled} of ${int(julyAll.base)}</b>${mName(firstChurnM)}: ${pct(firstAll.cancelled, firstAll.base)}<br>(${firstAll.cancelled} of ${firstAll.base})`}, 3)}
+      <p class="foot">Lines show monthly churn from ${mName(firstChurnM)} ${firstChurnM.slice(0, 4)} (grey dot) to ${mName(LAST)} ${LAST.slice(0, 4)} (white dot). Each plan's line has its own scale.</p>
+    </div>`
+},
+{
+  key: 'stay', nav: 'Who stays',
+  headline: `Customers who build ${repTop.bucket} reports in their first full month almost all stay: <span class="accent">${p1(repTop.stayed_pct)}</span> ${of(repTop.stayed, repTop.customers)} are still here 6 months on, vs ${p1(repLow.stayed_pct)} ${of(repLow.stayed, repLow.customers)} for ${repLow.bucket} reports`,
+  scope: `Cohort: ${int(repCohort)} customers who signed up ${mName(first.month)} ${first.month.slice(0, 4)}–Jan 2026, so all have 6 months of history · First full month = the month after signup (signup month is partial) · Stayed = not cancelled within 6 months of signup`,
+  body: () => `
+    <div class="col">
+      <span class="label">Still a customer 6 months later</span>
+      <div class="hero">${p1(repTop.stayed_pct)}</div>
+      <p class="lede">of customers who built ${repTop.bucket} reports in their first full month <span class="n">(${repTop.stayed} of ${repTop.customers})</span></p>
+      <p class="sub">${repLow.bucket} reports: ${pctOf(repLow.stayed, repLow.customers)}</p>
+      <div class="stat">
+        <span class="label">Integrations connected · ${mName(LAST)}</span>
+        <div class="big">${p1(itLast.pct)}</div>
+        <p class="sub" style="margin:0">of active customers have at least one ${of(itLast.with_integration, itLast.customers)}, up from ${p1(itFirst.pct)} in ${mName(itFirst.month)} ${of(itFirst.with_integration, itFirst.customers)}</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="chart"><h3>Stayed 6 months, by first-month reports <span class="n">% · customers</span></h3>
+        ${barsV(rep.map(r => ({x: `${r.bucket} · ${r.customers}`, v: r.stayed_pct, hl: r === repTop, tip: `${r.bucket} reports: ${p1(r.stayed_pct)} stayed (${r.stayed} of ${r.customers})`})), {h: 232, fmt: p1})}</div>
+      <div class="chart"><h3>Stayed 6 months, by first-month integration <span class="n">%</span></h3>
+        ${barsPair(PLANS.map(p => ({label: p, bars: [0, 1].map(a => { const r = sip(p, a); return {name: a ? 'one or more' : 'none', short: `${a ? '1+' : 'none'} · ${r.customers}`, v: r.stayed_pct, hl: p === 'Starter' && a === 1, plain: `${p1(r.stayed_pct)} (${r.stayed} of ${r.customers})`}; })})), {h: 252})}</div>
+    </div>
+    <div class="col rows">
+      <h3>Customers with an integration connected, by plan</h3>
+      ${rowsHead(['Plan', `${mName(itFirst.month)}–${mName(LAST)}`, mName(LAST), 'Have one'])}
+      ${PLANS.map(p => ({p, s: itPlan(p)})).sort((a, b) => b.s[b.s.length - 1].pct - a.s[a.s.length - 1].pct).map(({p, s}, i) => {
+        const l = s[s.length - 1], f = s[0];
+        return row({name: p, small: `${mName(f.month)}: ${p1(f.pct)} (${f.with_integration} of ${f.customers})`, hl: p === 'Starter',
+          spark: spark(s.map(r => r.pct), s.map(r => `${mName(r.month)} ${p1(r.pct)}`)), v: p1(l.pct), d: `<b>${int(l.with_integration)} of ${int(l.customers)}</b>active customers`}, i);
+      }).join('')}
+      ${row({name: 'All plans', total: true, spark: spark(it.map(r => r.pct)), v: p1(itLast.pct), d: `<b>${int(itLast.with_integration)} of ${int(itLast.customers)}</b>active customers`}, 3)}
+      <p class="foot">Starter moved fastest: ${p1(itPlanM('Starter', '2026-03').pct)} in Mar → ${p1(itPlanM('Starter', LAST).pct)} in ${mName(LAST)}. Active customers in full months only; signup and cancel months are partial.</p>
+    </div>`
+},
+{
+  key: 'support', nav: 'Support topics',
+  headline: `${cap(worst.category)} is the one support topic customers rate badly: <span class="accent">${worst.avg_sat.toFixed(2)} out of 5</span>, while every other topic averages ${Math.min(...others.map(t => t.avg_sat)).toFixed(1)} or better`,
+  scope: `Satisfaction = the 1–5 survey score; only rated tickets count (${int(ratedTotal)} of ${int(ticketsTotal)} tickets rated) · Ranked from least to most satisfied · Open = not resolved by ${asofText}`,
+  body: () => `
+    <div class="col">
+      <span class="label">Least-satisfied topic · ${worst.category}</span>
+      <div class="hero">${worst.avg_sat.toFixed(2)}<small> / 5</small></div>
+      <p class="lede">average rating across ${worst.rated} rated tickets <span class="n">(of ${worst.tickets} opened)</span></p>
+      <p class="sub">${pctOf(worst.low_rated, worst.rated)} rated it 1 or 2</p>
+      <div class="stat">
+        <span class="label">${cap(worst.category)} share of all tickets</span>
+        <div class="big">${pct(worst.tickets, ticketsTotal)}</div>
+        <p class="sub" style="margin:0">${int(worst.tickets)} of ${int(ticketsTotal)} tickets, ${mName(first.month)} ${first.month.slice(0, 4)}–${mName(LAST)} ${LAST.slice(0, 4)}</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="chart"><h3>Rated 1 or 2, by topic <span class="n">% of rated tickets · count</span></h3>
+        ${barsH(topics.map((t, i) => ({label: cap(t.category), v: t.low_pct, hl: i === 0, text: p1(t.low_pct), count: `${t.low_rated} of ${t.rated}`, plain: `${p1(t.low_pct)} (${t.low_rated} of ${t.rated})`})), {rowH: 52, labelW: 190})}</div>
+      <div class="chart"><h3>${cap(worst.category)} tickets opened per month</h3>
+        ${barsV(topicMonthly(worst.category).map(r => ({x: mName(r.month), v: r.tickets, hl: r.month === LAST, tip: `${mLong(r.month)}: ${r.tickets} tickets, ${r.rated} rated, avg ${r.avg_sat}`})), {h: 210})}</div>
+    </div>
+    <div class="col rows">
+      <h3>Topics ranked by satisfaction, lowest first</h3>
+      ${rowsHead(['Topic', 'By month', 'Avg / 5', 'Rated'])}
+      ${topics.map((t, i) => {
+        const s = topicMonthly(t.category).filter(r => r.rated >= 5);
+        return row({name: cap(t.category), small: `${int(t.tickets)} tickets · ${t.avg_days_to_resolve} days`, hl: i === 0,
+          spark: spark(s.map(r => r.avg_sat), s.map(r => `${mName(r.month)} ${r.avg_sat}`)),
+          v: t.avg_sat.toFixed(2), d: `<b>${t.rated} of ${t.tickets}</b>${t.still_open} still open`}, i);
+      }).join('')}
+      <p class="foot">Rated = tickets with a survey score, of all opened. Lines show the monthly average score (months with 5+ rated tickets); each line has its own scale.</p>
+    </div>`
+}];
+
+/* ---------- ticker headlines, written from the numbers ---------- */
+const HEADLINES = [
+  `<b>${int(last.customers_end)}</b> customers at the end of ${mName(LAST)}, ${signed(custDelta)} in a month <span class="n">(${signed(100 * custDelta / prev.customers_end, p1)} from ${int(prev.customers_end)})</span>`,
+  `<b>${usd(last.cash_collected)}</b> collected in ${mName(LAST)}: ${pct(last.cash_collected, last.mrr_billed)} of billed <span class="n">(${int(paidCharges)} of ${int(last.charges)} charges paid)</span>`,
+  `Monthly cash is up <b>${cashMultiple.toFixed(1)}×</b> since ${mName(first.month)} ${first.month.slice(0, 4)}: ${usd(first.cash_collected)} → ${usd(last.cash_collected)}`,
+  `${mName(LAST)} churn <b>${pct(julyAll.cancelled, julyAll.base)}</b> ${of(julyAll.cancelled, julyAll.base)}, down from ${pct(firstAll.cancelled, firstAll.base)} in ${mName(firstChurnM)} ${of(firstAll.cancelled, firstAll.base)}`,
+  `Starter churn <b>${p1(starterJuly.churn_pct)}</b> in ${mName(LAST)} ${of(starterJuly.cancelled, starterJuly.base)}, and ${starterIntegReason} of those ${starterJuly.cancelled} named missing integrations`,
+  `Built ${repTop.bucket} reports in month one? <b>${p1(repTop.stayed_pct)}</b> still here at 6 months ${of(repTop.stayed, repTop.customers)}`,
+  `Starter customers with no integration in month one: <b>${p1(sip('Starter', 0).stayed_pct)}</b> stayed 6 months ${of(sip('Starter', 0).stayed, sip('Starter', 0).customers)} vs ${p1(sip('Starter', 1).stayed_pct)} with one ${of(sip('Starter', 1).stayed, sip('Starter', 1).customers)}`,
+  `<b>${p1(itLast.pct)}</b> of active customers now have an integration connected ${of(itLast.with_integration, itLast.customers)}, up from ${p1(itFirst.pct)} in ${mName(itFirst.month)} ${of(itFirst.with_integration, itFirst.customers)}`,
+  `${cap(worst.category)} tickets average <b>${worst.avg_sat.toFixed(2)} / 5</b>; ${pct(worst.low_rated, worst.rated)} were rated 1 or 2 ${of(worst.low_rated, worst.rated)}`,
+  `${mName(dupe.month)} billing counted once per customer: <b>${dupe.duplicate_rows}</b> duplicate charges <span class="n">(${usd(dupe.duplicate_paid)})</span> left out of cash`,
+];
+
+/* ---------- render ---------- */
+const $ = id => document.getElementById(id);
+const asof = new Date(DATA.data_through + 'T12:00');
+$('asof').textContent = asof.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
+
+$('sections').innerHTML = SECTIONS.map((s, i) => `
+  <section class="sec" id="sec-${s.key}" aria-labelledby="h-${s.key}">
+    <div class="head"><span class="label kick"><b>${String(i + 1).padStart(2, '0')} / ${String(SECTIONS.length).padStart(2, '0')}</b> ${s.nav}</span>
+      <h1 class="headline" id="h-${s.key}">${s.headline}</h1></div>
+    <div class="body">${s.body()}</div>
+    <div class="scope"><span class="label">How it's counted</span><span>${s.scope}</span></div>
+  </section>`).join('');
+
+$('nav').innerHTML = SECTIONS.map((s, i) => `<button type="button" data-i="${i}"><span>${String(i + 1).padStart(2, '0')}</span>${s.nav}<i></i></button>`).join('');
+
+const items = HEADLINES.map(h => `<li>${h}</li>`).join('');
+$('crawl').innerHTML = `<ul>${items}</ul><ul aria-hidden="true">${items}</ul>`;
+// ~90px per second; reading scrollWidth forces layout, so no need to wait for a frame
+$('crawl').style.setProperty('--crawl', Math.max(30, Math.round($('crawl').scrollWidth / 2 / 90)) + 's');
+
+/* rotation: every 12 s; ?s=N pins a section; arrow keys / nav clicks step */
+document.documentElement.style.setProperty('--dwell', DWELL + 'ms');
+const params = new URLSearchParams(location.search);
+const pinned = params.has('s');
+let cur = pinned ? Math.max(0, Math.min(SECTIONS.length - 1, +params.get('s') - 1)) : 0, timer;
+function show(i) {
+  cur = (i + SECTIONS.length) % SECTIONS.length;
+  document.querySelectorAll('.sec').forEach((el, j) => {
+    el.classList.toggle('on', j === cur);
+    if (j === cur) el.querySelectorAll('.head,.body').forEach(n => { n.classList.remove('fade'); void n.offsetWidth; n.classList.add('fade'); });
+  });
+  document.querySelectorAll('#nav button').forEach((b, j) => {
+    b.setAttribute('aria-current', j === cur);
+    const bar = b.querySelector('i'); bar.replaceWith(bar.cloneNode());  // restart progress fill
+  });
+  clearTimeout(timer);
+  if (!pinned) timer = setTimeout(() => show(cur + 1), DWELL);
+}
+$('nav').classList.toggle('paused', pinned);
+$('nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); });
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') show(cur + 1); if (e.key === 'ArrowLeft') show(cur - 1); });
+show(cur);
+
+/* clock */
+function tick() {
+  const d = new Date();
+  $('clock').textContent = d.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
+  $('today').textContent = d.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'});
+}
+tick(); setInterval(tick, 1000);
+
+/* scale the 1920×1080 stage to the screen */
+function fit() {
+  const s = $('stage');
+  if (innerWidth <= 900) { s.style.transform = ''; return; }
+  s.style.transform = `translate(-50%,-50%) scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`;
+}
+fit(); addEventListener('resize', fit);
+</script>
+</body>
+</html>
